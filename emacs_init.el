@@ -2,7 +2,6 @@
 ;;
 ;; Based on https://github.com/dimitri/emacs-kicker
 ;;
-;; 
 
 (require 'cl)               ; common lisp goodies, loop
 
@@ -22,6 +21,10 @@
  el-get-sources
  '((:name evil
       :after (progn
+	    (define-key evil-normal-state-map "\C-a" 'evil-beginning-of-line)
+            (define-key evil-insert-state-map "\C-a" 'beginning-of-line)
+            (define-key evil-visual-state-map "\C-a" 'evil-beginning-of-line)
+            (define-key evil-motion-state-map "\C-a" 'evil-beginning-of-line)
             (define-key evil-normal-state-map "\C-e" 'evil-end-of-line)
             (define-key evil-insert-state-map "\C-e" 'end-of-line)
             (define-key evil-visual-state-map "\C-e" 'evil-end-of-line)
@@ -52,10 +55,11 @@
 (setq
  my:el-get-packages
  '(el-get
-   auto-complete
    yasnippet
+   auto-complete
    evil
    flycheck
+   ecb
    color-theme
    color-theme-zenburn
    monokai-theme
@@ -68,6 +72,15 @@
 
 ;; install new packages and init already installed packages
 (el-get 'sync my:el-get-packages)
+
+;; activating ecb
+(require 'ecb)
+(require 'ecb-autoloads)
+
+
+;; Yasnippet
+(yas-global-mode 1)
+(add-to-list 'yas-snippet-dirs "~/.emacs.d/el-get/yasnippet")
 
 
 (setq delete-auto-save-files t)     ; Delete unnecesary auto-save files (ex. #%*mail*#')
@@ -132,7 +145,11 @@
 ;; manager or do M-x kill-emacs.  Don't need a nice shortcut for a once a
 ;; week (or day) action.
 (global-set-key (kbd "C-x C-b") 'ido-switch-buffer)
+(global-set-key (kbd "M-p") 'ido-switch-buffer)
 (global-set-key (kbd "C-x B") 'ibuffer)
+
+;; Saving buffer
+(global-set-key (kbd "C-s") 'save-buffer)
 
 ;; have vertical ido completion lists
 (setq ido-decorations
@@ -149,6 +166,26 @@
 ;;      $ npm install jshint -g
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
+
+;; Using TRAMP via `'sudo` when trying to edit `root` files
+(defadvice ido-find-file (after find-file-sudo activate)
+  "Find file as root if necessary."
+  (unless (and buffer-file-name
+	       (file-writable-p buffer-file-name))
+        (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
+
+(when (eq system-type 'darwin)
+
+  ;; default Latin font (e.g. Consolas)
+  (set-face-attribute 'default nil :family "Menlo for Powerline")
+
+  ;; default font size (point * 10)
+  (set-face-attribute 'default nil :height 115)
+  )
+
+;; Disabling tool-bar
+(tool-bar-mode -1)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -156,7 +193,8 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("a6b3505132c41686521cad3cccdc28ef7cc1f04338073a63146a231a1786537c" default))))
+    ("a6b3505132c41686521cad3cccdc28ef7cc1f04338073a63146a231a1786537c" default)))
+ '(ecb-options-version "2.40"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
